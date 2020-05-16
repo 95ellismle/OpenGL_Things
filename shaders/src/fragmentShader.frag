@@ -1,9 +1,9 @@
 #version 330 core
 out vec4 FragColor;
 
-uniform vec4 outColor; // This is set via OpenGL code
+in vec3 vertexColor;
 
 void main()
 {
-    FragColor = outColor;
+    FragColor = vec4(vertexColor, 1.0f);
 }

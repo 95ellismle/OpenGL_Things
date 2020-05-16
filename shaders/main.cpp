@@ -1,7 +1,6 @@
 #include <glad/glad.h>
 #include <GLFW/glfw3.h>
 #include <iostream>
-#include <cmath>
 
 // Own modules
 #include <input.hpp>
@@ -9,29 +8,16 @@
 #include <files.hpp>
 #include <shaders.hpp>
 
-float vertices[] = {
-     0.5,  0.5, 0.0,  // top right
-     0.5, -0.5, 0.0,  // bottom right
-    -0.5, -0.5, 0.0,  // bottom left
-    -0.5,  0.5, 0.0   // top left 
-};
-unsigned int indices[] = {  // note that we start from 0!
-    0, 1, 3,   // first triangle
-    1, 2, 3    // second triangle
-}; 
-
-
-
-const char *vertexShaderSource, *fragShaderSource;
 
 int main () {
+    
     // Read the vertices array
     IO::IntArrayFile Elements;
     Elements.read("./data/elements.arr");
     IO::FloatArrayFile Vertices;
     Vertices.read("./data/vertices.arr");
 
-    
+
     /*
      Init methods -initialise GLAD and GLFW and check everything is linked properly.
     */
@@ -92,25 +78,24 @@ int main () {
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_handle);
     glBufferData(GL_ELEMENT_ARRAY_BUFFER, Elements.size, Elements.data, GL_STATIC_DRAW);
 
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+    // Tell OpenGL where to look for the positions
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
+    // Tell OpenGL where to look for the colors
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
+
 
     // Keep the window open
     while(!glfwWindowShouldClose(window)) {
         // Process mouse and keyboard events
         input::processInput(window);
-
-        float timeValue = glfwGetTime();
-        float greenValue = (sin(timeValue) / 2.0f) + 0.5f;
-        int vertexColorLocation = glGetUniformLocation(ShaderProgram.handle, "outColor");
     
         render::drawFrame();
         glUseProgram(ShaderProgram.handle);
-        glUniform4f(vertexColorLocation, 1.0f - greenValue*2, 1-greenValue, greenValue*3, 1.0f);
-
         glBindVertexArray(VAO_handle);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_handle);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);

@@ -203,8 +203,27 @@ namespace IO {
             }
 
         public:
+            void virtual print(int *data) {
+                for (unsigned int i=0; i<num_vertices; i++) {
+                    for (unsigned int j=0; j<num_arr_elem-1; j++) {
+                        std::cout << data[(i*num_arr_elem) + j]<< ", ";
+                    }
+                    std::cout << data[((i+1) * num_arr_elem) -1] << std::endl;
+                }
+            }
+            void virtual print(float *data) {
+                for (unsigned int i=0; i<num_vertices; i++) {
+                    for (unsigned int j=0; j<num_arr_elem-1; j++) {
+                        std::cout << data[(i*num_arr_elem) + j]<< ", ";
+                    }
+                    std::cout << data[((i+1) * num_arr_elem) -1] << std::endl;
+                }
+            }
+
             unsigned int num_vertices;
             unsigned int num_arr_elem;
+            unsigned int length;
+            size_t size;
     };
 
     /*
@@ -236,7 +255,9 @@ namespace IO {
             }
 
         public:
-            size_t size;
+            void print() {
+                ArrayFile::print(data);
+            }
             int *data;
     };
 
@@ -264,13 +285,67 @@ namespace IO {
              Will allocate the int array that hold the data and sets the size variable.
             */
             void allocate_arrays() override {
-                size = sizeof(float) * num_arr_elem * num_vertices;
+                length = num_arr_elem * num_vertices;
+                size = sizeof(float) * length;
                 data = (float*) malloc(size);
             }
 
         public:
-            size_t size;
+            void print() {
+                ArrayFile::print(data);
+            }
             float *data;
+    };
+
+    // Overloading the maths operators for easy data manipulation
+    FloatArrayFile operator+(FloatArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] + var2;
+        }
+        return var1;
+    };
+    FloatArrayFile operator-(FloatArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] - var2;
+        }
+        return var1;
+    };
+    FloatArrayFile operator*(FloatArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] * var2;
+        }
+        return var1;
+    };
+    FloatArrayFile operator/(FloatArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] / var2;
+        }
+        return var1;
+    };
+    // Overloading the maths operators for easy data manipulation
+    IntArrayFile operator+(IntArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] + var2;
+        }
+        return var1;
+    };
+    IntArrayFile operator-(IntArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] - var2;
+        }
+        return var1;
+    };
+    IntArrayFile operator*(IntArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] * var2;
+        }
+        return var1;
+    };
+    IntArrayFile operator/(IntArrayFile &var1, const float &var2) {
+        for (unsigned int i=0; i<var1.length; i++) {
+            var1.data[i] = var1.data[i] / var2;
+        }
+        return var1;
     };
 }
 
