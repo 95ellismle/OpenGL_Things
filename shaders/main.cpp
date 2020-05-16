@@ -7,6 +7,7 @@
 #include <render.hpp>
 #include <files.hpp>
 #include <shaders.hpp>
+#include <cmath>
 
 
 int main () {
@@ -82,23 +83,30 @@ int main () {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
     // Tell OpenGL where to look for the colors
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3* sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_TRUE, 6 * sizeof(float), (void*)(3* sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    int posIncrLocation = glGetUniformLocation(ShaderProgram.handle, "posIncr");
 
     // Keep the window open
     while(!glfwWindowShouldClose(window)) {
         // Process mouse and keyboard events
         input::processInput(window);
-    
+        
         render::drawFrame();
         glUseProgram(ShaderProgram.handle);
+
+        float time = glfwGetTime();
+        glUniform3f(posIncrLocation, 0.0f, 0.3*sin(time), sin(time));
+
         glBindVertexArray(VAO_handle);
         glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, EBO_handle);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+
 
         glfwSwapBuffers(window); // Swap the 2D image front and back buffers
         glfwPollEvents(); // Check for any mouse or keyboard events
