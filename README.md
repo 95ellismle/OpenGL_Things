@@ -1,2 +1,2 @@
-# Open_GL_Tings
+# Open_GL_Things
 Somewhere to keep all my code as I learn how to use OpenGL. 
