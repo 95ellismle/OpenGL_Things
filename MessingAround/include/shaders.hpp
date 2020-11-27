@@ -1,0 +1,190 @@
+#ifndef SHADERS_HEADER_GUARD
+#define SHADERS_HEADER_GUARD
+
+#include <string>
+#include <glad/glad.h>
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
+#include <files.hpp>
+#include <iostream>
+
+namespace shader {
+
+    /*
+     Will load the shader and compile them.
+
+     This will also check for compilation errors and print any.
+    */
+    class SingleShader {
+
+        private:
+            /*
+             A little method to check the shader has compiled correctly.
+
+             Will throw an error if not and will print the OpenGL info_log.
+            */
+            char info_log[512];
+            void check_shader_compilation(GLenum shader_type) {
+                glGetShaderiv(handle, GL_COMPILE_STATUS, &success);
+
+                if (!success) {
+                    glGetShaderInfoLog(handle, 512, NULL, info_log);
+                    switch (shader_type) {
+                        case GL_FRAGMENT_SHADER:
+                            std::cerr << "\n\nVertex Shader Compilation Failed\n";
+                            std::cerr << info_log << std::endl;
+                            throw "ShaderError";
+
+                        case GL_VERTEX_SHADER:
+                            std::cerr << "\n\nFragment Shader Compilation Failed\n";
+                            std::cerr << info_log << std::endl;
+                            throw "ShaderError";
+
+                        default:
+                            std::cerr << "\n\nUnknown Shader Type: " << shader_type << "\nInfoLog: ";
+                            std::cerr << info_log << std::endl;
+                            throw "ShaderError";
+                    }
+                }
+            }
+
+        protected:
+
+        public:
+            int success;
+            unsigned int handle;
+            const char *shader_program_txt;
+        
+            /*
+                Constructor: Will create the shader and attach the shader txt from a file.
+
+                Inputs:
+                    * fp <std::string> => The path of the shader program.
+                    * shader_type <GLenum> => The type of shader to compile.
+            */
+            SingleShader (std::string fp, GLenum shader_type) {
+                // Create a shader
+                handle = glCreateShader(shader_type);
+                
+                // Read the shader file
+                IO::File shader_file;
+                shader_file.read(fp);
+                shader_program_txt = shader_file.file_txt.c_str();
+                
+                // Attach the shader program to the shader
+                glShaderSource(handle, 1, &shader_program_txt, NULL);
+                glCompileShader(handle);
+
+                // Check the shader for errors
+                check_shader_compilation(shader_type);
+            }
+    };
+
+
+    /*
+     Create a shader program.
+    */
+    class Program {
+        private:
+            char info_log[1024];
+            void check_link_errors() {
+                glGetProgramiv(handle, GL_LINK_STATUS, &success);
+                if (!success) {
+                    glGetProgramInfoLog(handle, 1024, NULL, info_log);
+                    std::cerr << "\n\nShader Program Link Error:";
+                    std::cerr << " Info Log: " << info_log << std::endl;
+                    throw "ShaderProgramError";
+                }
+            }
+
+        protected:
+
+        public:
+            unsigned int handle;
+            int success;
+
+            /*
+              Create the shader program and link the shaders
+            */
+            void addShaders(SingleShader Shaders[], unsigned int num_shaders) {
+                // Create the shader program object
+                handle = glCreateProgram();
+            
+                // Attach the shaders
+                for (unsigned int i=0; i<num_shaders; i++) {
+                    glAttachShader(handle, Shaders[i].handle);
+                }
+                glLinkProgram(handle);
+
+                // Check everything went ok
+                check_link_errors();
+
+                // Delete shaders
+                for (unsigned int i=0; i<num_shaders; i++) {
+                    glDeleteShader(Shaders[i].handle);
+                }
+            };
+
+            // Will set the perspective for the shader program
+            void inline setPerspective(float width, float height,
+                                       float view_angle=40.0f, float min_z=0.01f,
+                                       float max_z=200.0f)
+            {
+                glm::mat4 projection = glm::mat4(1.0f);
+                projection = glm::perspective(glm::radians(40.0f),
+                                              width / height, min_z,
+                                              max_z);
+                set("proj", projection);
+            }
+
+            //// Will set the model matrix. This tells openGL where the 'camera' is and which direction it is facing.
+            //void inline setModel(std::vector<glm::vec3> &translate, std::vector<glm::vec3> &rotateAxis, float rotateAng=0.0f) {
+            //    glm::mat4 model = glm::mat4(1.0f);
+            //    if (~(translate[0] == 0 & translate[1] == 0 & translate[2] == 0)) {
+            //        model = glm::translate(model, cubePositions[i]);
+            //    }
+
+            //    if (rotateAng != 0) {
+            //        model = glm::rotate(model,
+            //                            rotateAng, 
+            //                            glm::vec3(rotateAxis[0],
+            //                                      rotateAxis[1],
+            //                                      rotateAxis[2]));
+            //    }
+            //    ShaderProgram.set("model", model);
+            //}
+
+            /*
+             Activate the shader
+            */
+            void inline use() {
+                glUseProgram(handle);
+            }
+
+            /*
+             Uniform setters -overloaded.
+            */
+            // set bool
+            void inline set(const std::string &name, bool value) const {         
+                glUniform1i(glGetUniformLocation(handle, name.c_str()), (int)value); 
+            }
+            // set int
+            void inline set(const std::string &name, int value) const { 
+                glUniform1i(glGetUniformLocation(handle, name.c_str()), value); 
+            }
+            // set float
+            void inline set(const std::string &name, float value) const { 
+                glUniform1f(glGetUniformLocation(handle, name.c_str()), value); 
+            }
+            // set mat4
+            void inline set(const std::string &name, glm::mat4 trans) const {
+                unsigned int loc = glGetUniformLocation(handle, name.c_str());
+                glUniformMatrix4fv(loc, 1, GL_FALSE, glm::value_ptr(trans));
+            }
+
+    };
+}
+
+#endif
